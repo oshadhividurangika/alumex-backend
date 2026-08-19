@@ -2,6 +2,9 @@ import express from "express"
 import User from "../Models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config()
 
 export async function createUser(req,res){
 
@@ -66,16 +69,13 @@ export async function loginUser(req,res){
                     isBlocked:user.isBlocked, 
                 }
 
-                const token = jwt.sign(payload,"T-Alumex-397",{expiresIn:"24h"})
+                const token = jwt.sign(payload,process.env.JWT_SEC_KEY,{expiresIn:"24h"})
                 
                 res.json({
                     token:token,
-                    message : "login Successful"
+                    isAdmin:user.isAdmin
                 })
 
-              /* res.json({
-                    message : "login Successful"
-                })*/
             }else{
                 res.status(401).json({
                     message : "Invalid Password"

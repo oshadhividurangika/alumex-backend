@@ -4,12 +4,14 @@ import Profile from "./Models/Profile.js"
 import ProfileRouter from "./Routers/ProfileRouter.js"
 import UserRouter from "./Routers/UserRouter.js"
 import authenticateUser from "./MiddleWares/authentication.js"
+import cors from "cors"
+import dotenv from "dotenv"
 
-//console.log("Hello World...")
+dotenv.config()
 
 const app =express()
 
-const mongodbURL="mongodb+srv://ADmin:AlU1234@cluster0.qxhubq9.mongodb.net/Profile?appName=Cluster0"
+const mongodbURL=process.env.MONGO_URI
 
 mongoose.connect(mongodbURL).then(
         ()=>{
@@ -18,10 +20,11 @@ mongoose.connect(mongodbURL).then(
     
 )
 
+app.use(cors())
 app.use(express.json())
 app.use(authenticateUser)
-app.use("/profiles",ProfileRouter)
-app.use("/users", UserRouter)
+app.use("/api/profiles",ProfileRouter)
+app.use("/api/users", UserRouter)
 
 app.put("/",()=>
     {console.log("Put Request Received")}

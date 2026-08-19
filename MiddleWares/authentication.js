@@ -1,4 +1,7 @@
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config()
 
 export default function authenticateUser(req,res,next){
     const header = req.header("Authorization")
@@ -8,7 +11,7 @@ export default function authenticateUser(req,res,next){
         const token=header.replace("Bearer ","")
         console.log(token)
 
-        jwt.verify(token,"T-Alumex-397",(error,decoded)=>{
+        jwt.verify(token,process.env.JWT_SEC_KEY,(error,decoded)=>{
             if(decoded==null){
                 res.json({
                     message:"Invalid Token. Please Login Again."
