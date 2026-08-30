@@ -1,10 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom"; // Added missing react-router-dom import
+import { Link, Navigate, useNavigate } from "react-router-dom"; // Added missing react-router-dom import
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const [epfno, setEPFNo] = useState("");
   const [password, setPassword] = useState("");
+
+  const navigate=useNavigate()
 
   function handleLogin(e) {
     e.preventDefault(); // Prevents automatic browser reload on form submit
@@ -17,12 +20,18 @@ export default function LoginPage() {
         epfno: epfno,
         password: password,
       })
-      .then((res) => {
-        console.log(res.data);
-        localStorage.setItem("token", res.data.token);
+      .then((response) => {
+        console.log(response.data);
+        localStorage.setItem("token", response.data.token);
+
+        if(navigate("/admin")){
+
+        }else{
+          navigate("/")
+        }
       })
       .catch((error) => {
-        console.error("Login Failed", error);
+        toast.error(error.response.data.message)
       });
   }
 
