@@ -19,14 +19,14 @@ const Footer = () => {
                 © {new Date().getFullYear()} Alumex PLC. All Rights Reserved.
             </p>
 
-            {/* Center text */}
+            {/* Center text
             <p style={{ margin: 0, fontStyle: "italic" }}>
                 Ultimate in Aluminium Profiles
-            </p>
+            </p> */}
 
             {/* Right side text */}
             <p style={{ margin: 0 }}>
-                Version 1.0.0
+                Alumex Profiles Digital Portal
             </p>
         </footer>
     );
