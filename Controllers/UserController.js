@@ -28,7 +28,8 @@ export async function createUser(req,res){
             EPFNo : req.body.EPFNo,
             FirstName : req.body.FirstName,
             LastName : req.body.LastName,
-            password : passwordHash
+            password : passwordHash,
+            isAdmin: req.body.isAdmin || false
         })
 
         await newUser.save()

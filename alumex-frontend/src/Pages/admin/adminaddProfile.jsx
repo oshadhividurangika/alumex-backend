@@ -1078,38 +1078,28 @@
 
 // }
 
-
-
-
-
-
-
-
-
-
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { ImageIcon, FileEditIcon } from "lucide-react";
-
 import uploadMedia from "../../Utils/mediaUpload";
 import Header from "../../Components/Header";
 import Footer from "../../Components/Footer";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminaddProfilesPage() {
-
-    const [image, setImage] = useState("");
-    const [drawing, setDrawing] = useState("");
+    const [image, setImage] = useState(null);
+    const [drawing, setDrawing] = useState(null);
     const [isAvailable, setIsAvailable] = useState(true);
 
     const [profileName, setProfileName] = useState("");
-    const [profileType, setProfileType] = useState("");
     const [temper, setTemper] = useState("");
     const [alloy, setAlloy] = useState("");
     const [plants, setPlants] = useState([]);
 
+    const navigate = useNavigate();
 
     function handlePlantChange(e) {
-
         const plant = e.target.value;
 
         if (e.target.checked) {
@@ -1117,110 +1107,103 @@ export default function AdminaddProfilesPage() {
         } else {
             setPlants(plants.filter((item) => item !== plant));
         }
-
     }
 
-
     async function handleSave() {
-
         try {
-
             const token = localStorage.getItem("token");
 
-            if (token == null) {
+            if (!token) {
                 toast.error("You must be logged in to perform this action.");
-                window.location.href = "/login";
+                navigate("/login");
                 return;
             }
 
-
-            if (profileName.trim() === "") {
+            if (!profileName.trim()) {
                 toast.error("Please enter a profile name.");
                 return;
             }
 
-
-            if (profileType === "") {
-                toast.error("Please select a profile type.");
-                return;
-            }
-
-
-            if (temper === "") {
-                toast.error("Please select a temper.");
-                return;
-            }
-
-
-            if (alloy === "") {
-                toast.error("Please select an alloy.");
-                return;
-            }
-
-
-            if (plants.length === 0) {
-                toast.error("Please select at least one plant.");
-                return;
-            }
-
+            let imageUrl = "";
+            let drawingUrl = "";
 
             if (image) {
-                await uploadMedia(image);
+                imageUrl = await uploadMedia(image);
             }
-
 
             if (drawing) {
-                await uploadMedia(drawing);
+                drawingUrl = await uploadMedia(drawing);
             }
 
+            const ProfileData = {
+                profileName: profileName,
+                temper: temper,
+                alloy: alloy,
+                plants: plants,
+                isAvailable: isAvailable,
+                image: imageUrl,
+                drawing: drawingUrl
+            };
 
-            console.log({
-                profileName,
-                profileType,
-                temper,
-                alloy,
-                plants,
-                isAvailable,
-                image,
-                drawing
-            });
-
+            await axios.post(
+                import.meta.env.VITE_API_URL + "/api/profiles",
+                ProfileData,
+                {
+                    headers: {
+                        Authorization: "Bearer " + token
+                    }
+                }
+            );
 
             toast.success("Profile added successfully.");
+            navigate("/admin/adminProfile");
 
         } catch (error) {
+            console.error("Save Error:", error);
+
+            if (error?.response?.status === 401) {
+                toast.error("Session expired. Please log in again.");
+                localStorage.removeItem("token");
+                navigate("/login");
+                return;
+            }
 
             toast.error(
                 error?.response?.data?.message ||
                 "Failed to add profile. Please try again."
             );
-
         }
-
     }
 
-
     return (
-
         <div className="w-full min-h-screen bg-[#f5f7f6]">
+            {/* Gray Webkit Scrollbar Styling */}
+            <style>{`
+                ::-webkit-scrollbar {
+                    width: 8px;
+                }
+                ::-webkit-scrollbar-track {
+                    background-color: transparent;
+                }
+                ::-webkit-scrollbar-thumb {
+                    background-color: #9ca3af;
+                    border-radius: 4px;
+                }
+                ::-webkit-scrollbar-thumb:hover {
+                    background-color: #6b7280;
+                }
+            `}</style>
 
             <Header />
 
-
-            <main className="w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8">
-
-
-                {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 mb-7">
-
-                    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">
+            {/* Sticky Page Header Bar */}
+            <div className="sticky top-0 z-10 bg-[#f5f7f6] px-4 sm:px-6 md:px-8 lg:px-10 py-4 border-b border-gray-200/60 backdrop-blur-md bg-opacity-90">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
                         Add New Profile
                     </h1>
 
-
                     <div className="flex items-center gap-4">
-
-
                         {/* Cancel Button */}
                         <button
                             type="button"
@@ -1230,8 +1213,7 @@ export default function AdminaddProfilesPage() {
                             Cancel
                         </button>
 
-
-                        {/* Save Button */}
+                        {/* Save Button (Kept original green) */}
                         <button
                             type="button"
                             onClick={handleSave}
@@ -1239,375 +1221,211 @@ export default function AdminaddProfilesPage() {
                         >
                             Save
                         </button>
-
-
                     </div>
-
                 </div>
+            </div>
 
-
+            <main className="w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8">
                 {/* Form Container */}
                 <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm p-5 sm:p-6 md:p-8">
-
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-
 
                         {/* Profile Name */}
                         <div>
-
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Profile Name
                             </label>
-
                             <input
                                 type="text"
                                 value={profileName}
-                                onChange={(e) => {
-                                    setProfileName(e.target.value);
-                                }}
+                                onChange={(e) => setProfileName(e.target.value)}
                                 placeholder="Enter profile name"
-                                className="w-full h-11 px-4 border border-gray-300 rounded-md text-sm text-black outline-none bg-white placeholder:text-gray-400 focus:border-[#00A84F] focus:ring-2 focus:ring-green-100"
+                                className="w-full h-11 px-4 border border-gray-300 rounded-md text-sm text-black outline-none bg-white placeholder:text-gray-400 focus:border-[#1D2A44] focus:ring-2 focus:ring-slate-200"
                             />
-
                         </div>
-
-
-                        {/* Profile Type */}
-                        <div>
-
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Profile Type
-                            </label>
-
-                            <select
-                                value={profileType}
-                                onChange={(e) => {
-                                    setProfileType(e.target.value);
-                                }}
-                                className={`w-full h-11 px-4 border border-gray-300 rounded-md bg-white text-sm outline-none focus:border-[#00A84F] focus:ring-2 focus:ring-green-100 ${profileType === "" ? "text-gray-400" : "text-black"}`}
-                            >
-
-                                <option value="" disabled className="text-gray-400">
-                                    Select Type
-                                </option>
-
-                                <option value="Hollow" className="text-black">
-                                    Hollow
-                                </option>
-
-                                <option value="Solid" className="text-black">
-                                    Solid
-                                </option>
-
-                            </select>
-
-                        </div>
-
 
                         {/* Temper */}
                         <div>
-
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Temper
                             </label>
-
                             <select
                                 value={temper}
-                                onChange={(e) => {
-                                    setTemper(e.target.value);
-                                }}
-                                className={`w-full h-11 px-4 border border-gray-300 rounded-md bg-white text-sm outline-none focus:border-[#00A84F] focus:ring-2 focus:ring-green-100 ${temper === "" ? "text-gray-400" : "text-black"}`}
+                                onChange={(e) => setTemper(e.target.value)}
+                                className={`w-full h-11 px-4 border border-gray-300 rounded-md bg-white text-sm outline-none focus:border-[#1D2A44] focus:ring-2 focus:ring-slate-200 ${temper === "" ? "text-gray-400" : "text-black"}`}
                             >
-
                                 <option value="" disabled className="text-gray-400">
                                     Select Temper
                                 </option>
-
-                                <option value="T4" className="text-black">
-                                    T4
-                                </option>
-
-                                <option value="T5" className="text-black">
-                                    T5
-                                </option>
-
-                                <option value="T6" className="text-black">
-                                    T6
-                                </option>
-
-                                <option value="T66" className="text-black">
-                                    T66
-                                </option>
-
+                                <option value="T4" className="text-black">T4</option>
+                                <option value="T5" className="text-black">T5</option>
+                                <option value="T6" className="text-black">T6</option>
+                                <option value="T66" className="text-black">T66</option>
                             </select>
-
                         </div>
-
 
                         {/* Alloy */}
                         <div>
-
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Alloy
                             </label>
-
                             <select
                                 value={alloy}
-                                onChange={(e) => {
-                                    setAlloy(e.target.value);
-                                }}
-                                className={`w-full h-11 px-4 border border-gray-300 rounded-md bg-white text-sm outline-none focus:border-[#00A84F] focus:ring-2 focus:ring-green-100 ${alloy === "" ? "text-gray-400" : "text-black"}`}
+                                onChange={(e) => setAlloy(e.target.value)}
+                                className={`w-full h-11 px-4 border border-gray-300 rounded-md bg-white text-sm outline-none focus:border-[#1D2A44] focus:ring-2 focus:ring-slate-200 ${alloy === "" ? "text-gray-400" : "text-black"}`}
                             >
-
                                 <option value="" disabled className="text-gray-400">
                                     Select Alloy
                                 </option>
-
-                                <option value="1085" className="text-black">
-                                    1085
-                                </option>
-
-                                <option value="6005" className="text-black">
-                                    6005
-                                </option>
-
-                                <option value="6060" className="text-black">
-                                    6060
-                                </option>
-
-                                <option value="6061" className="text-black">
-                                    6061
-                                </option>
-
-                                <option value="6063" className="text-black">
-                                    6063
-                                </option>
-
-                                <option value="6082" className="text-black">
-                                    6082
-                                </option>
-
+                                <option value="1085" className="text-black">1085</option>
+                                <option value="6005" className="text-black">6005</option>
+                                <option value="6060" className="text-black">6060</option>
+                                <option value="6061" className="text-black">6061</option>
+                                <option value="6063" className="text-black">6063</option>
+                                <option value="6082" className="text-black">6082</option>
                             </select>
-
                         </div>
 
+                        {/* Availability  */}
+                        <div className="flex flex-col justify-end h-full">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Availability
+                            </label>
+                            <div className="h-11 flex items-center">
+                                <label className="flex items-center gap-3 cursor-pointer w-fit">
+                                    <div className="relative">
+                                        <input
+                                            type="checkbox"
+                                            checked={isAvailable}
+                                            onChange={(e) => setIsAvailable(e.target.checked)}
+                                            className="peer sr-only"
+                                        />
+                                        <div className="w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-[#00A84F] transition" />
+                                        <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-4" />
+                                    </div>
+                                    <span className="text-sm text-gray-700">
+                                        {isAvailable ? "Available" : "Not Available"}
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
 
                         {/* Plants */}
-                        <div className="md:col-span-2">
-
+                        <div className="md:col-span-2 pt-2">
                             <label className="block text-sm font-medium text-gray-700 mb-3">
                                 Plants
                             </label>
 
-
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
-
                                 {/* Alco */}
-                                <label className={`flex items-center gap-3 h-11 px-4 border rounded-md cursor-pointer transition ${plants.includes("Alco") ? "border-[#00A84F] bg-green-50" : "border-gray-300 hover:bg-gray-50"}`}>
-
+                                <label className={`flex items-center gap-3 h-11 px-4 border rounded-md cursor-pointer transition ${plants.includes("Alco") ? "border-[#1D2A44] bg-slate-100" : "border-gray-300 hover:bg-gray-50"}`}>
                                     <input
                                         type="checkbox"
                                         value="Alco"
                                         checked={plants.includes("Alco")}
                                         onChange={handlePlantChange}
-                                        className="w-4 h-4 accent-[#00A84F]"
+                                        className="w-4 h-4 accent-[#1D2A44]"
                                     />
-
-                                    <span className="text-sm text-gray-700">
-                                        Alco
-                                    </span>
-
+                                    <span className="text-sm text-gray-700">Alco</span>
                                 </label>
 
-
                                 {/* Alumex */}
-                                <label className={`flex items-center gap-3 h-11 px-4 border rounded-md cursor-pointer transition ${plants.includes("Alumex") ? "border-[#00A84F] bg-green-50" : "border-gray-300 hover:bg-gray-50"}`}>
-
+                                <label className={`flex items-center gap-3 h-11 px-4 border rounded-md cursor-pointer transition ${plants.includes("Alumex") ? "border-[#1D2A44] bg-slate-100" : "border-gray-300 hover:bg-gray-50"}`}>
                                     <input
                                         type="checkbox"
                                         value="Alumex"
                                         checked={plants.includes("Alumex")}
                                         onChange={handlePlantChange}
-                                        className="w-4 h-4 accent-[#00A84F]"
+                                        className="w-4 h-4 accent-[#1D2A44]"
                                     />
-
-                                    <span className="text-sm text-gray-700">
-                                        Alumex
-                                    </span>
-
+                                    <span className="text-sm text-gray-700">Alumex</span>
                                 </label>
 
-
                                 {/* Prime */}
-                                <label className={`flex items-center gap-3 h-11 px-4 border rounded-md cursor-pointer transition ${plants.includes("Prime") ? "border-[#00A84F] bg-green-50" : "border-gray-300 hover:bg-gray-50"}`}>
-
+                                <label className={`flex items-center gap-3 h-11 px-4 border rounded-md cursor-pointer transition ${plants.includes("Prime") ? "border-[#1D2A44] bg-slate-100" : "border-gray-300 hover:bg-gray-50"}`}>
                                     <input
                                         type="checkbox"
                                         value="Prime"
                                         checked={plants.includes("Prime")}
                                         onChange={handlePlantChange}
-                                        className="w-4 h-4 accent-[#00A84F]"
+                                        className="w-4 h-4 accent-[#1D2A44]"
                                     />
-
-                                    <span className="text-sm text-gray-700">
-                                        Prime
-                                    </span>
-
+                                    <span className="text-sm text-gray-700">Prime</span>
                                 </label>
-
-
                             </div>
-
                         </div>
-
-
-                        {/* Availability */}
-                        <div className="md:col-span-2 pb-5 border-b border-gray-200">
-
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
-                                Availability
-                            </label>
-
-
-                            <label className="flex items-center gap-3 cursor-pointer w-fit">
-
-                                <div className="relative">
-
-                                    <input
-                                        type="checkbox"
-                                        checked={isAvailable}
-                                        onChange={(e) => {
-                                            setIsAvailable(e.target.checked);
-                                        }}
-                                        className="peer sr-only"
-                                    />
-
-                                    <div className="w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-[#00A84F] transition" />
-
-                                    <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-4" />
-
-                                </div>
-
-
-                                <span className="text-sm text-gray-700">
-                                    {isAvailable ? "Available" : "Not Available"}
-                                </span>
-
-                            </label>
-
-                        </div>
-
 
                         {/* Profile Image */}
                         <div>
-
                             <label className="block text-sm font-medium text-gray-700 mb-3">
                                 Profile Image
                             </label>
 
-
-                            <div className="min-h-[190px] border-2 border-dashed border-green-200 rounded-lg flex flex-col items-center justify-center px-4 py-6">
-
-                                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-3">
-
-                                    <ImageIcon
-                                        className="w-6 h-6 text-[#00A84F]"
-                                        strokeWidth={1.7}
-                                    />
-
+                            <div className="min-h-[190px] border-2 border-dashed border-[#1D2A44]/30 rounded-lg flex flex-col items-center justify-center px-4 py-6">
+                                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                                    <ImageIcon className="w-6 h-6 text-[#1D2A44]" strokeWidth={1.7} />
                                 </div>
-
 
                                 <span className="text-sm text-gray-600 truncate max-w-full mb-3">
                                     {image ? image.name : "No image selected"}
                                 </span>
 
-
                                 <input
                                     id="profileImage"
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) => {
-                                        setImage(e.target.files[0]);
-                                    }}
+                                    onChange={(e) => setImage(e.target.files[0])}
                                     className="hidden"
                                 />
 
-
+                                {/* Choose Image Button  */}
                                 <label
                                     htmlFor="profileImage"
                                     className="px-5 py-2 bg-[#00A84F] hover:bg-[#008f43] text-white rounded-md text-sm font-medium cursor-pointer transition"
                                 >
                                     Choose Image
                                 </label>
-
                             </div>
-
                         </div>
-
 
                         {/* Drawing */}
                         <div>
-
                             <label className="block text-sm font-medium text-gray-700 mb-3">
                                 Drawing
                             </label>
 
-
-                            <div className="min-h-[190px] border-2 border-dashed border-green-200 rounded-lg flex flex-col items-center justify-center px-4 py-6">
-
-                                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-3">
-
-                                    <FileEditIcon
-                                        className="w-6 h-6 text-[#00A84F]"
-                                        strokeWidth={1.7}
-                                    />
-
+                            <div className="min-h-[190px] border-2 border-dashed border-[#1D2A44]/30 rounded-lg flex flex-col items-center justify-center px-4 py-6">
+                                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                                    <FileEditIcon className="w-6 h-6 text-[#1D2A44]" strokeWidth={1.7} />
                                 </div>
-
 
                                 <span className="text-sm text-gray-600 truncate max-w-full mb-3">
                                     {drawing ? drawing.name : "No drawing selected"}
                                 </span>
 
-
                                 <input
                                     id="drawing"
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) => {
-                                        setDrawing(e.target.files[0]);
-                                    }}
+                                    onChange={(e) => setDrawing(e.target.files[0])}
                                     className="hidden"
                                 />
 
-
+                                {/* Choose Drawing Button */}
                                 <label
                                     htmlFor="drawing"
                                     className="px-5 py-2 bg-[#00A84F] hover:bg-[#008f43] text-white rounded-md text-sm font-medium cursor-pointer transition"
                                 >
                                     Choose Drawing
                                 </label>
-
                             </div>
-
                         </div>
 
-
                     </div>
-
                 </div>
-
             </main>
 
-
-            {/* Footer */}
             <Footer />
-
         </div>
-
     );
-
 }

@@ -1,37 +1,40 @@
 import { useState } from "react";
 import axios from "axios";
-import { Link, Navigate, useNavigate } from "react-router-dom"; // Added missing react-router-dom import
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const [epfno, setEPFNo] = useState("");
   const [password, setPassword] = useState("");
 
-  const navigate=useNavigate()
+  const navigate = useNavigate();
 
   function handleLogin(e) {
-    e.preventDefault(); // Prevents automatic browser reload on form submit
-    console.log("EPF No: ", epfno);
-    console.log("Password: ", password);
+    e.preventDefault();
 
-    // Converted to Template Literal so VITE_API_URL evaluates properly
+    // Fallback base URL if VITE_API_URL is missing
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
     axios
-      .post(`${import.meta.env.VITE_API_URL}/users/login`, {
-        epfno: epfno,
+      .post(`${baseUrl}/users/login`, {
+        EPFNo: epfno,      // Updated key to match backend req.body.EPFNo
         password: password,
       })
       .then((response) => {
-        console.log(response.data);
+        console.log("Login Response: ", response.data);
         localStorage.setItem("token", response.data.token);
 
-        if(navigate("/admin")){
+        toast.success("Login successful!");
 
-        }else{
-          navigate("/")
+        // Redirect based on backend isAdmin flag
+        if (response.data.isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/");
         }
       })
       .catch((error) => {
-        toast.error(error.response.data.message)
+        toast.error(error.response?.data?.message || "Login failed");
       });
   }
 
@@ -41,15 +44,14 @@ export default function LoginPage() {
 
       <div className="w-1/2 h-full flex justify-center items-center">
         <div
-  className="w-[480px] p-10 rounded-2xl flex flex-col gap-6 shadow-2xl"
-  style={{
-    background: "rgba(20, 25, 20, 0.55)",
-    backdropFilter: "blur(16px)",
-    WebkitBackdropFilter: "blur(16px)",
-    border: "1px solid rgba(255, 255, 255, 0.15)",
-    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4)",
-  }}
-
+          className="w-[480px] p-10 rounded-2xl flex flex-col gap-6 shadow-2xl"
+          style={{
+            background: "rgba(20, 25, 20, 0.55)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4)",
+          }}
         >
           <h1 className="text-center font-[Sora,sans-serif] text-4xl font-bold text-[#7ED957] mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
             Sign in
@@ -109,7 +111,6 @@ export default function LoginPage() {
                 Register
               </Link>
             </p>
-            
           </form>
         </div>
       </div>

@@ -7,11 +7,15 @@ const profileSchema=new mongoose.Schema(
             required:true,
             unique:true
         },
-        altNames:{
-            type:[String],
-            required:false,
-            default:[]
-        },
+        // altNames:{
+        //     type:[String],
+        //     required:false,
+        //     default:[]
+        // },
+        // Type:{
+        //     type:String,
+        //     required:true
+        // },
         Temp:{
             type:String,
             required:true
